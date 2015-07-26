@@ -1,0 +1,136 @@
+---
+title: "Demonstration of LLN and CLT using the exponential distribution"
+author: "Unmesh Phadke"
+date: "22nd July,2015"
+output: html_document
+---
+
+This a report in which we will simulate the exponential distribution and compare it with the central limit theorem. We will first plot a histogram for the exponential distribution with 40 samples with the parameter lambda equal to 0.2.
+Then we will plot a histogram for the averages of 40 exponentials for 1000 simulations. 
+
+Now comes the actual simulation:
+
+So, first we will deal with just tje exponential distribution.
+
+We set the parameter lambda
+
+```{r,echo=TRUE}
+lambda=0.2
+```
+We now plot the histogram for this distribution.
+
+```{r.echo=FALSE}
+hist(rexp(1000,0.2),main="exp distribution")
+#We will create 40 random exponentials and plot the histogram.
+```
+
+Now, to demonstrate CLT and LLN we will have to obtain the distribution of the averages of 40 exponentials.
+
+```{r,echo=TRUE}
+means=NULL  #The means vector will contain the mean for each simulation
+
+#The for loop for the simulations
+for (i in 1:1000){
+  means=c(means,mean(rexp(40,lambda)))
+  #At each step, we append the mean of 40 exponentials to the means vector
+}
+```
+
+Now we will plot the histogram for the distribution for the averages of 40 exponentials.
+
+```{r,echo=F}
+hist(means,main="distribution of means")
+```
+
+
+Sample mean vs theoretical mean
+---
+The parameter lambda for the exponential distribution was set to be equal to 0.2. The mean of the exponential distribution is equal to 1/lambda.THis is the theoretical mean.
+
+```{r,echo=TRUE}
+theoretical_mean<- 1/lambda
+theoretical_mean
+```
+The following is the plot of our exponential distribution with the theoretical mean shown in blue.
+```{r,echo=FALSE}
+hist(rexp(1000,0.2),xlab="Exponential Distribution")
+abline(v=theoretical_mean,col="blue")
+```
+
+Our sample for the distribution of the averages  is the 'means' vector. So, the sample mean is the mean of the 'means'vector.
+
+```{r.echo=T}
+sample_mean<-mean(means)
+sample_mean
+```
+
+The following is the plot for the distribution of the averages of 40 exponentials with the sample mean shown in green and the theoretical mean shown in blue.
+```{r,echo=FALSE}
+hist(means,xlab="The distribution of the  averages")
+abline(v=sample_mean,col="green")
+abline(v=theoretical_mean,col="blue")
+```
+
+It is clear  that the sample mean and the theoretical mean are pretty close. This is an example of the Law of Large Numbers(LLN) which essentially says that the average of a distribution of averages tends to become equal to the value it is estimating as the number of samples becomes large.
+
+We can make an interesting plot to demonstrate the LLN. we plot the sample mean as a function of the number of simulations and observe how it converges to the theoretical mean.
+
+```{r,echo="TRUE"}
+m=NULL
+for (i in 1:1000){
+  m=c(m,mean(means[1:i]))
+}
+x=1:1000
+plot(x,m,main="Convergence of sample mean to the theoretical mean",xlab="No. of simulations")
+```
+
+Sample variance vs Theoretical Variance
+---
+
+The standard deviation and the mean of the exponential distribution are equal and given by 1/lambda.This is the theoretical variance.
+
+```{r,echo=TRUE}
+theoretical_variance=(1 /lambda)^2
+theoretical_variance
+```
+
+The sample variance is the variance of the data in the means vector.
+
+```{r,echo=TRUE}
+sample_variance<-var(means)
+sample_variance
+```
+
+By the CLT(Central Limit Theorem) the mean of large number of iid random variables is a normal random variable with mean equal to the mean of the random variable while the variance is equal to the original variance divided by the number of random variables(40 in our case). The following calculations verify the result .
+```{r,echo=TRUE}
+sample_variance
+theoretical_variance/40
+# Both the above numbers are close will get closer if we go on increasing the number of random variables used to calculate the mean.
+```
+
+
+Comparing the two distributions
+---
+
+We will now compare the two distributions using direct plots.
+The red line shows the sample mean and the blue one shows the theoretical mean.
+```{r,echo=FALSE}
+par(mfrow=c(1,2)) #Two plots side-by-side
+hist(rexp(1000,0.2),main="exp distribution")
+abline(v=1/lambda,col="red")
+abline(v=0,col="blue")
+abline(v=2/lambda,col="blue")
+hist(means,main="distribution of means",breaks=15)
+abline(v=mean(means),col="red")
+abline(v=sample_mean-sqrt(sample_variance),col="green")
+abline(v=sample_mean + sqrt(sample_variance),col="green")
+abline(v=theoretical_mean+sqrt(theoretical_variance),col="yellow")
+abline(v=theoretical_mean-sqrt(theoretical_variance))
+abline(v=1/lambda,col="blue")
+```
+
+In the above plot for the distribution of the means, the green lines represent distances of one standard deviation form the sample mean. The blue line represents the sample mean and the red line represents the theoretical mean.The sample mean and the theoretical mean are so close to each other that they may not be seen as seperate. The green lines represent distance of one sample std deviation from sample mean and yellow lines represent distance of one theoretical std deviation from the theoretical mean.
+
+Similarly, in the histogram for the exponential distribution, the red line is the theoretical mean and the two blue lines represent the interval contained within one standard deviation from the mean.
+
+As seen above, clearly the histogram for the distribution of averages looks very Gaussian(normal) with a peak which is very near to the sample mean.
