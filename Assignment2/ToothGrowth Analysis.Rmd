@@ -1,0 +1,122 @@
+---
+title: "ToothGrowth analysis"
+author: "Unmesh Phadke"
+date: "24th July 2015"
+output: html_document
+
+---
+
+Description
+---
+This report is part of the course project for the course Statistical Inference which is part of the Data Science Specialisation offered by Johns Hopkins University on Coursera.
+This project deals with the ToothGrowth dataset in R.In this dataset,the response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid). The dataframe has 60 observations with the following 3 variables:
+1)len :numeric Tooth  Length
+2)supp factor: Supplement type(VC or OJ)
+3)dose: numeric Dose in kilograms
+
+The main goals for this project are:
+1.To perform basic exploratory data analyses of the ToothGrowth data set in R.
+2.To summarise the dataset.
+3.Compare tooth-growths by suplement and dosage using hypothesis testing and/or confidence intervals.
+
+
+
+Exploratory Data Analyses
+---
+Now we will do some basic exploratory data analysis on the data set.
+
+First,we will convert the 'supp' variable in the dataset to a factor variable.
+```{r,echo=TRUE}
+data(ToothGrowth)
+ToothGrowth$supp<-as.character(as.factor(ToothGrowth$supp))
+```
+
+
+Now we will plot the data. For each type of delivery method (OJ and VC) we will plot the mean tooth growth for each dosage.
+```{r library,echo=TRUE,include=FALSE}
+library(ggplot2)
+library(dplyr)
+df<-aggregate(ToothGrowth,by=list(ToothGrowth$dose,ToothGrowth$supp),FUN=mean,na.rm=TRUE)#Get the mean for each category.
+df$len<-as.numeric(df$len)
+```
+```{r,echo=TRUE,fig.width=5,fig.height=4}
+graph<-ggplot(df,aes(df$dose,df$len))
+graph<-graph+ geom_point()
+graph<-graph+ geom_line()
+graph<- graph + facet_grid(Group.2~.) #Facets for the 'supp' variable
+graph<-graph + labs(x= "Weight of the dose in mg")+ labs(y= "Mean tooth length") + labs(title= "Tooth-Length vs Dosage")
+graph
+remove(graph)
+```
+
+Drawing boxplots could be useful as well. We do this below.
+```{r,echo=TRUE,fig.width=5,fig.height=4}
+g<-ggplot(ToothGrowth,aes(factor(dose),len,fill=supp))
+g<-g + geom_boxplot()
+g<-g + facet_grid(.~supp)
+g<-g +labs(x= "Weight of the dose in mg")+ labs(y= "Mean tooth length") + labs(title= "Tooth-Length vs Dosage")
+g
+remove(g)
+```
+
+We would also like to probably look at the variance for each dosage weight . Simple scatter plots do the job well here.
+```{r,echo=TRUE,fig.width=5,fig.height=4}
+g1<-ggplot(ToothGrowth,aes(dose,len)) #Note that the dataframe used is #ToothGrowth and not df.
+g1<-g1 + geom_point()
+g1<-g1+ facet_grid(.~supp)
+g1<-g1 +labs(x= "Weight of the dose in mg")+ labs(y= "Mean tooth length") + labs(title= "Tooth-Length vs Dosage")
+g1
+remove(g1)
+```
+
+It can be noted that for VC,the variance in tooth size is pretty high for the 2,g dosage..
+
+
+Short Summary of the data
+---
+Here is a short summary of the dataset.
+```{r,echo=TRUE}
+str(ToothGrowth)
+summary(ToothGrowth)
+df_VC<-subset(ToothGrowth,supp=="VC")
+df_OJ<-subset(ToothGrowth,supp=="OJ")
+tapply(ToothGrowth$len,ToothGrowth$supp,FUN=summary)
+```
+
+Comparing tooth length with respect to supp and dose
+---
+In this section we will perform hypothesis testing to compare dependence of tooth growth on the dosage and the supp variable.
+
+So, here we will perform a paired t test for each dosage value comparing whether the means for the two supp values are equal or not.
+We first do the analysis for the dosage of 0.5 mg.
+```{r echo=TRUE}
+df_VC<-group_by(df_VC,dose)
+df_OJ<-group_by(df_OJ,dose)
+t.test(df_OJ$len[1:10],df_VC$len[1:10],paired=TRUE,var.equal=FALSE) #Test for 0.5 mg
+```
+From the output  we observe that the p-value is 0.015 which is much less than 0.05 and the confidence intervals(95%) also, does not contain 0. So the evidence is enough to reject the null hypothesis. The confidence interval has positive values so the tooth length is expected to be higher in case of the Orange Juice dosage for 0.5 mg.
+```{r echo=TRUE}
+t.test(df_OJ$len[11:20],df_VC$len[11:20],paired=TRUE,var.equal=FALSE) #Test for 1 mg
+```
+
+Again, we observe that the P-value is 0.008 which is very less and this presents strong evidence against the null hypothesis.So, similarly as the previous case, the expected tooth length is greater for the orange juice doasge for the 1 mg case.
+
+```{r echo=TRUE}
+t.test(df_OJ$len[21:30],df_VC$len[21:30],paired=TRUE,var.equal=FALSE) #Test for 1.5 mg
+```
+In this case, it is observed that the P-value is very high at 0.967 which presents strong evidence in favour of the null hypothesis. Also note that the 95% confidence interval has zero contained in this and so the null hypothesis that the expected tooth growths for both dosages pf 2mg is accepted. Note that this is also vaguely evident from the scatter plot and the box-plot  in the exploratory analysis section.
+
+---
+title:"Assumptions:"
+---
+In the above section, while performing the simulations we assumed the following things:
+1:The true variances of the sample are unequal. This assumption is made because we are not sure about the parameters of the distributions for the two different types of supplies and the factors that affect these distrributions. In sucha case it is safe to assume unequal variances.
+2. We are assuming that a threshold of 0.05 for the P-values is enough to accept one hypothesis. That means that we are dealing with 95 % confidence intervals.
+3.The data is paired as the corresponding readings for the two supply categories are for the same pig(10 different pigs).
+
+---
+title:"Conclusions"
+---
+1:The dosage using the Orange Juice is proving to be more effective in general than the one using ascorbic acid atlest for the 0.5mg and 1 mg doses. For the 2 mg dose, both perform equally well.
+2:Exploratory data analyses confirm that expected tooth length is dependent on the amount of dose given and whether it is given through Orange juice or Ascorbic acid.
+
